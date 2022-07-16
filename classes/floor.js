@@ -1,9 +1,9 @@
 export default class Floor {
-  constructor(p5, floorNumber) {
+  constructor(p5, floorNumber, windowWidth) {
     this.floorNumber = floorNumber;
 
     this.speed = 1.5;
-    this.width = p5.windowWidth;
+    this.width = windowWidth;
     this.y = p5.windowHeight * 0.6;
     this.x = this.floorNumber * this.width;
     this.height = p5.windowHeight * 0.4 + 10;

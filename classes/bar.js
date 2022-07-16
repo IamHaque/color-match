@@ -1,26 +1,23 @@
 export default class Bar {
-  constructor(p5, colors, outlineColors) {
+  constructor(p5, image, windowWidth) {
     this.speed = 3;
     this.width = 90;
     this.y = p5.windowHeight * 0.6;
     this.height = p5.windowHeight * 0.4 + 10;
-    this.x =
-      p5.windowWidth * 0.5 + Math.floor((p5.windowWidth * 0.5) / 94) * 94;
+    this.x = windowWidth * 0.5 + Math.floor((windowWidth * 0.5) / 94) * 94;
 
-    this.selectedColorIndex = -1;
-    this.color = p5.color(76, 70, 96);
+    this.image = image;
+    this.selectedBarColorIndex = -1;
+    this.fillColor = p5.color(76, 70, 96);
     this.outlineColor = p5.color(54, 49, 68);
-
-    this.colors = colors;
-    this.outlineColors = outlineColors;
   }
 
-  cycleColor() {
-    this.selectedColorIndex += 1;
+  changeColor(fillColor) {
+    this.fillColor = fillColor;
+  }
 
-    if (this.selectedColorIndex >= this.colors.length) {
-      this.selectedColorIndex = 0;
-    }
+  changeTreeColor(newImage) {
+    this.image = newImage;
   }
 
   glow(p5) {
@@ -40,14 +37,16 @@ export default class Bar {
   }
 
   draw(p5) {
-    if (this.selectedColorIndex >= 0) {
-      this.color = this.colors[this.selectedColorIndex];
-      this.outlineColor = this.outlineColors[this.selectedColorIndex];
-    }
-
-    p5.strokeWeight(5);
-    p5.fill(this.color);
+    p5.strokeWeight(2);
+    p5.fill(this.fillColor);
     p5.stroke(this.outlineColor);
-    p5.rect(this.x, this.y, this.width, this.height);
+    p5.image(
+      this.image,
+      this.x - this.width / 2,
+      this.y - 8,
+      this.width * 2,
+      this.height + 15
+    );
+    // p5.rect(this.x, this.y, this.width, this.height);
   }
 }

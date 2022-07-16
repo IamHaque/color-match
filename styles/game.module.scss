@@ -1,1 +1,7 @@
 @use "./utils" as *;
+
+.canvas {
+  display: flex;
+  justify-content: center;
+  background-image: linear-gradient(#3fdeec, #ffebd2);
+}

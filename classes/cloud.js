@@ -1,27 +1,49 @@
 export default class Cloud {
-  constructor(p5, cloudNumber, velocity = 1, y = 0, x = 0) {
-    this.cloudNumber = cloudNumber;
+  constructor(
+    p5,
+    index,
+    velocity = 1,
+    y = 0,
+    x = 0,
+    scale = 1,
+    ROCKS_IMAGE,
+    CLOUDS_IMAGE
+  ) {
+    this.ROCKS_IMAGE = ROCKS_IMAGE;
+    this.CLOUDS_IMAGE = CLOUDS_IMAGE;
 
     this.y = y;
-    this.gap = 150;
-    this.width = 1001;
-    this.height = 151;
+    this.scale = scale;
+    this.width = 1920;
+    this.index = index;
+    this.height = 1080;
     this.velocity = velocity;
-    this.cloud = p5.loadImage("/clouds.svg");
-    this.x = x
-      ? x
-      : this.cloudNumber * this.width + this.cloudNumber * this.gap;
+    this.x = x ? x : this.index * this.width * this.scale;
   }
 
   update() {
     this.x -= this.velocity;
 
-    if (this.x + this.width + this.gap < 0) {
-      this.x = this.width + this.gap;
+    if (this.x + this.width * this.scale < 0) {
+      this.x = this.width * this.scale;
     }
   }
 
   draw(p5) {
-    p5.image(this.cloud, this.x, this.y);
+    // p5.image(this.cloud, this.x, this.y);
+    p5.image(
+      this.ROCKS_IMAGE,
+      this.x,
+      this.y,
+      this.width * this.scale,
+      this.height * this.scale
+    );
+    p5.image(
+      this.CLOUDS_IMAGE,
+      this.x,
+      this.y,
+      this.width * this.scale,
+      this.height * this.scale
+    );
   }
 }

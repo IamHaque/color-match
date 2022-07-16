@@ -22,7 +22,7 @@ function MyApp({ Component, pageProps }) {
   return (
     <>
       <Head>
-        <title>Meter Log</title>
+        <title>Color Match</title>
         <meta
           name="description"
           content="Match the bar color with the ball color."
