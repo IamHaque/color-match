@@ -36,6 +36,18 @@ input {
   height: calc(var(--vh, 100vh));
 }
 
+#p5_loading {
+  inset: 0;
+  display: flex;
+  color: black;
+  font-size: 3rem;
+  font-weight: bold;
+  position: absolute;
+  align-items: center;
+  justify-content: center;
+  background-image: $bg-gradient;
+}
+
 @media screen and (max-width: 480px) {
   html,
   body {
