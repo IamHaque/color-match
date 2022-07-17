@@ -70,7 +70,7 @@ export default function Home() {
           <p>
             Welcome <span>{username}</span>!
             <br />
-            Match the next Tree's color with the Dino's color.
+            Match the next Tree&apos;s color with the Dino&apos;s color.
             <br />
             Press SPACE, CLICK or TOUCH to change Tree color.
           </p>
