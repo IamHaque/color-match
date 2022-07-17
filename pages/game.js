@@ -186,7 +186,7 @@ export default function Game() {
     }
 
     if (!CLOUD_IMAGE) {
-      CLOUD_IMAGE = p5.loadImage(`/BG/Clouds_1.png`);
+      CLOUD_IMAGE = p5.loadImage(`/BG/clouds_1.png`);
     }
   };
 
