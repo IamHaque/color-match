@@ -518,15 +518,18 @@ export default function Home({ leaderboardData }) {
   };
 
   // P5 MouseClicked
-  const mouseClicked = ({ _setupDone }) => {
+  const mouseClicked = () => {
     if (isGameOver) return;
+    changeTreeColor();
+  };
 
-    if (
-      _setupDone &&
-      updateGame &&
-      nextTreeIndex !== undefined &&
-      TREES.length > 0
-    ) {
+  const touchStarted = () => {
+    if (isGameOver) return;
+    changeTreeColor();
+  };
+
+  const changeTreeColor = () => {
+    if (updateGame && nextTreeIndex !== undefined && TREES.length > 0) {
       TREES[nextTreeIndex].colorIndex =
         (TREES[nextTreeIndex].colorIndex + 1) % AVAILABLE_COLORS.length;
 
@@ -559,6 +562,7 @@ export default function Home({ leaderboardData }) {
         preload={preload}
         className={styles.canvas}
         mouseClicked={mouseClicked}
+        touchStarted={touchStarted}
         disableFriendlyErrors={true}
       />
     );
