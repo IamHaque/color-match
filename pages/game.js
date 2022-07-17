@@ -242,8 +242,6 @@ export default function Game() {
     GHOST_DINO = new Character(p5, CANVAS_WIDTH_REF.current + 100);
 
     TEXT = new Text();
-
-    p5.frameRate(45);
   };
 
   const draw = (p5) => {
