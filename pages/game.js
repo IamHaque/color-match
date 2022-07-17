@@ -86,7 +86,8 @@ export default function Game() {
     "purple",
     "red",
   ];
-  let AVAILABLE_COLORS = ["red", "lime", "blue"];
+  let REMAINING_COLORS = ["cyan", "green", "orange", "pink", "purple"];
+  let AVAILABLE_COLORS = ["blue", "red", "lime"];
   let selectedColorIndex = 1;
 
   const HSL_COLOR_PAIRS = {
@@ -108,11 +109,13 @@ export default function Game() {
   let DINO;
 
   let score = 0;
+  let difficultyIncrementAtScore = 15;
 
   let isGameStarted = false;
   let isGameOver = false;
   let updateGame = true;
 
+  const GAME_MODE = "DEVE";
   const MIN_DISTANCE_TO_START_GAME = 150;
 
   let lastGhostTreeAddedAtFrame;
@@ -197,7 +200,7 @@ export default function Game() {
       P5_HSL_COLORS[color] = p5.color(HSL_COLOR_PAIRS[color]);
     }
 
-    BACKDROP_SCALE = CANVAS_HEIGHT / 1080;
+    BACKDROP_SCALE = CANVAS_HEIGHT / 540;
 
     for (let index = 0; index <= 2; index++) {
       BACKDROPS.push(
@@ -207,8 +210,7 @@ export default function Game() {
 
     DINO = new Character(
       p5,
-      CANVAS_WIDTH / 2,
-      P5_HSL_COLORS,
+      CANVAS_WIDTH / 3,
       CHARACTER_JUMPING_IMAGES[AVAILABLE_COLORS[selectedColorIndex]],
       CHARACTER_FALLING_IMAGES[AVAILABLE_COLORS[selectedColorIndex]],
       CHARACTER_IDLE_IMAGES[AVAILABLE_COLORS[selectedColorIndex]],
@@ -221,10 +223,6 @@ export default function Game() {
   };
 
   const draw = (p5) => {
-    if (p5.frameCount % 120 === 0) {
-      console.log(p5.frameRate(), TREES.length);
-    }
-
     // DRAW
     p5.clear();
 
@@ -275,11 +273,13 @@ export default function Game() {
         nextTreeIndex = undefined;
         nextTreeCenter = undefined;
 
-        for (let treeIndex = TREES.length - 1; treeIndex >= 0; treeIndex--) {
+        for (let treeIndex = 0; treeIndex < TREES.length; treeIndex++) {
           const characterCenter = DINO.x;
           const treeCenter = TREES[treeIndex].x + TREES[treeIndex].width / 2;
 
-          if (treeCenter - characterCenter < 0) continue;
+          if (treeCenter - characterCenter < 0) {
+            continue;
+          }
 
           if (!nextTreeCenter) {
             nextTreeCenter = treeCenter;
@@ -341,24 +341,27 @@ export default function Game() {
               TREES.length > 0 &&
               selectedColorIndex !== TREES[nextTreeIndex].colorIndex
             ) {
-              setTimeout(() => {
-                isGameOver = true;
-                redirectTOGameOver(score);
-              }, 1000);
-              DINO.isDead = true;
-              updateGame = false;
-              playDeathSound();
+              if (GAME_MODE !== "DEV") {
+                DINO.isDead = true;
+                updateGame = false;
+
+                playDeathSound();
+
+                setTimeout(() => {
+                  isGameOver = true;
+                  redirectTOGameOver(score);
+                }, 1000);
+              }
             } else {
               playJumpSound();
 
               setTimeout(() => {
                 score += 1;
                 playScoreSound();
+                increaseGameDifficulty();
               }, 500);
 
-              selectedColorIndex = Math.floor(
-                Math.random() * AVAILABLE_COLORS.length
-              );
+              selectedColorIndex = getRandomArrayIndex(AVAILABLE_COLORS);
               DINO.changeCharacterColor({
                 jump: CHARACTER_JUMPING_IMAGES[
                   AVAILABLE_COLORS[selectedColorIndex]
@@ -382,35 +385,8 @@ export default function Game() {
     }
   };
 
-  const mouseClicked = (p5) => {
-    if (isGameOver) {
-      return;
-
-      DINO = new Character(
-        p5,
-        CANVAS_WIDTH / 2,
-        P5_HSL_COLORS,
-        CHARACTER_JUMPING_IMAGES[AVAILABLE_COLORS[selectedColorIndex]],
-        CHARACTER_FALLING_IMAGES[AVAILABLE_COLORS[selectedColorIndex]],
-        CHARACTER_IDLE_IMAGES[AVAILABLE_COLORS[selectedColorIndex]],
-        CHARACTER_DEAD_IMAGES[AVAILABLE_COLORS[selectedColorIndex]]
-      );
-      GHOST_DINO = new Character(p5, CANVAS_WIDTH + 100);
-      TREES = [];
-
-      lastGhostTreeAddedAtFrame = undefined;
-      lastTreeAddedAtFrame = undefined;
-      nextTreeCenter = undefined;
-      nextTreeIndex = undefined;
-
-      isGameStarted = false;
-      isGameOver = false;
-      updateGame = true;
-
-      score = 0;
-
-      return;
-    }
+  const mouseClicked = () => {
+    if (isGameOver) return;
 
     if (updateGame && nextTreeIndex !== undefined && TREES.length > 0) {
       TREES[nextTreeIndex].colorIndex =
@@ -421,6 +397,20 @@ export default function Game() {
       );
     }
   };
+
+  const increaseGameDifficulty = () => {
+    if (REMAINING_COLORS.length <= 0) return;
+
+    if (score === difficultyIncrementAtScore) {
+      difficultyIncrementAtScore = Math.floor(difficultyIncrementAtScore * 2.1);
+
+      const nextColorIndex = getRandomArrayIndex(REMAINING_COLORS);
+      const nextColor = REMAINING_COLORS.splice(nextColorIndex, 1)[0];
+      AVAILABLE_COLORS.push(nextColor);
+    }
+  };
+
+  const getRandomArrayIndex = (arr) => Math.floor(Math.random() * arr.length);
 
   return (
     <Sketch

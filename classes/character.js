@@ -1,5 +1,5 @@
 export default class Character {
-  constructor(p5, x, colors, jump, fall, idle, dead) {
+  constructor(p5, x, jump, fall, idle, dead) {
     this.frames = 0;
     this.radius = 60;
     this.x = x;
@@ -14,8 +14,8 @@ export default class Character {
       fall,
       idle,
       dead,
-      w: 680 * 0.25,
-      h: 472 * 0.25,
+      w: 170,
+      h: 118,
       state: "IDLE",
     };
   }
@@ -54,6 +54,8 @@ export default class Character {
   }
 
   update(p5) {
+    // let start = p5.millis();
+
     this.frames++;
     this.y = this.isDead ? this.floorYMax : this.getY(p5);
 
@@ -73,11 +75,6 @@ export default class Character {
   }
 
   draw(p5) {
-    // p5.strokeWeight(3);
-    // p5.fill(this.color);
-    // p5.stroke(this.outlineColor);
-    // p5.ellipse(this.x, this.y, this.radius);
-
     const characterState = this.character.state;
     let characterImage = this.character.idle;
     switch (characterState) {

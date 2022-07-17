@@ -25,9 +25,6 @@ export default class Tree {
   }
 
   draw(p5) {
-    p5.strokeWeight(2);
-    p5.fill(this.fillColor);
-    p5.stroke(this.outlineColor);
     p5.image(
       this.image,
       this.x - this.width / 2,

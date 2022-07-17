@@ -13,9 +13,9 @@ export default class Backdrop {
 
     this.y = y;
     this.scale = scale;
-    this.width = 1920;
+    this.width = 960;
     this.index = index;
-    this.height = 1080;
+    this.height = 540;
     this.velocity = velocity;
     this.x = x ? x : this.index * this.width * this.scale;
   }
