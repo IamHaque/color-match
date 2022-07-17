@@ -518,7 +518,7 @@ export default function Home({ leaderboardData }) {
   };
 
   // P5 MouseClicked
-  const mousePressed = ({ _setupDone }) => {
+  const mouseClicked = ({ _setupDone }) => {
     if (isGameOver) return;
 
     if (
@@ -558,7 +558,7 @@ export default function Home({ leaderboardData }) {
         setup={setup}
         preload={preload}
         className={styles.canvas}
-        mousePressed={mousePressed}
+        mouseClicked={mouseClicked}
         disableFriendlyErrors={true}
       />
     );
