@@ -19,6 +19,24 @@ export default async function handler(req, res) {
   }
 
   try {
+    const user = await prisma.users.findUnique({
+      where: {
+        username: username,
+      },
+    });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ status: "failed", message: "User not found" });
+    }
+
+    if (user.highscore >= score) {
+      return res
+        .status(401)
+        .json({ status: "failed", message: "Not high score" });
+    }
+
     const updatedUser = await prisma.users.update({
       where: {
         username: username,

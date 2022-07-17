@@ -35,3 +35,10 @@ input {
   overflow: hidden;
   height: calc(var(--vh, 100vh));
 }
+
+@media screen and (max-width: 480px) {
+  html,
+  body {
+    font-size: 13px;
+  }
+}

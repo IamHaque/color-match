@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     return res.status(401).json({
       status: "failed",
       message:
-        "Username have 5 to 15 characters.<br>Username can only have alphabets, numbers, . and _<br>Username must not start or end with . or _",
+        "Username must have 5 to 15 characters.<br>Username can only have alphabets, numbers, . and _<br>Username must not start or end with . or _",
     });
   }
 

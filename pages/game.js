@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import Text from "../classes/text";
 import Tree from "../classes/tree";
@@ -23,70 +23,90 @@ const Sketch = dynamic(
 export default function Game() {
   const router = useRouter();
 
-  let CANVAS_WIDTH = 100;
-  let CANVAS_HEIGHT = 100;
+  const CANVAS_WIDTH_REF = useRef(100);
+  const CANVAS_HEIGHT_REF = useRef(100);
 
-  let JUMP_SOUND;
-  let DEATH_SOUND;
-  let SCORE_INCREASE_SOUND;
+  const JUMP_SOUND_REF = useRef();
+  const DEATH_SOUND_REF = useRef();
+  const SCORE_INCREASE_SOUND_REF = useRef();
+
+  const USERNAME_REF = useRef();
 
   useEffect(() => {
-    JUMP_SOUND = new Audio("/land.mp3");
-    DEATH_SOUND = new Audio("/death.mp3");
-    SCORE_INCREASE_SOUND = new Audio("/score.mp3");
+    JUMP_SOUND_REF.current = new Audio("/land.mp3");
+    DEATH_SOUND_REF.current = new Audio("/death.mp3");
+    SCORE_INCREASE_SOUND_REF.current = new Audio("/score.mp3");
 
-    CANVAS_HEIGHT = window.innerHeight;
-    CANVAS_WIDTH = window.innerWidth > 720 ? 720 : window.innerWidth;
+    CANVAS_HEIGHT_REF.current = window.innerHeight;
+    CANVAS_WIDTH_REF.current =
+      window.innerWidth > 720 ? 720 : window.innerWidth;
+
+    let localUsername = JSON.parse(localStorage.getItem("jumpyDinoUsername"));
+    if (localUsername) {
+      USERNAME_REF.current = localUsername;
+    }
   }, []);
 
   const redirectTOGameOver = (score) => {
     router.push({
       pathname: "/gameOver",
-      query: { score },
+      query: { score, username: USERNAME_REF.current },
     });
   };
 
-  const stopAllSounds = () => {
-    JUMP_SOUND.pause();
-    DEATH_SOUND.pause();
-    SCORE_INCREASE_SOUND.pause();
+  const saveScore = async () => {
+    saveScoreLocally();
+    await saveScoreRemotely();
+  };
 
-    JUMP_SOUND.currentTime = 0;
-    DEATH_SOUND.currentTime = 0;
-    SCORE_INCREASE_SOUND.currentTime = 0;
+  const saveScoreLocally = () => {
+    localStorage.setItem("jumpyDinoLastScore", JSON.stringify(score));
+  };
+
+  const saveScoreRemotely = async () => {
+    const requestOptions = {
+      method: "POST",
+      body: JSON.stringify({ username: USERNAME_REF.current, score }),
+      headers: { "Content-Type": "application/json" },
+    };
+
+    const response = await fetch("/api/updateHighscore", requestOptions);
+    await response.json();
+  };
+
+  const stopAllSounds = () => {
+    JUMP_SOUND_REF.current.pause();
+    DEATH_SOUND_REF.current.pause();
+    SCORE_INCREASE_SOUND_REF.current.pause();
+
+    JUMP_SOUND_REF.current.currentTime = 0;
+    DEATH_SOUND_REF.current.currentTime = 0;
+    SCORE_INCREASE_SOUND_REF.current.currentTime = 0;
   };
 
   const playJumpSound = () => {
     stopAllSounds();
-    JUMP_SOUND.play();
+    JUMP_SOUND_REF.current.play();
   };
 
   const playScoreSound = () => {
     stopAllSounds();
-    SCORE_INCREASE_SOUND.play();
+    SCORE_INCREASE_SOUND_REF.current.play();
   };
 
   const playDeathSound = () => {
-    JUMP_SOUND.pause();
-    SCORE_INCREASE_SOUND.pause();
+    JUMP_SOUND_REF.current.pause();
+    SCORE_INCREASE_SOUND_REF.current.pause();
 
-    JUMP_SOUND.currentTime = 0;
-    SCORE_INCREASE_SOUND.currentTime = 0;
+    JUMP_SOUND_REF.current.currentTime = 0;
+    SCORE_INCREASE_SOUND_REF.current.currentTime = 0;
 
-    if (DEATH_SOUND.currentTime <= 0) DEATH_SOUND.play();
+    if (DEATH_SOUND_REF.current.currentTime <= 0)
+      DEATH_SOUND_REF.current.play();
   };
 
-  const ALL_COLORS = [
-    "blue",
-    "cyan",
-    "green",
-    "lime",
-    "orange",
-    "pink",
-    "purple",
-    "red",
-  ];
-  let REMAINING_COLORS = ["cyan", "green", "orange", "pink", "purple"];
+  const ALL_COLORS = ["blue", "cyan", "lime", "pink", "purple", "red"];
+  let REMAINING_COLORS = ["cyan", "pink", "purple"];
   let AVAILABLE_COLORS = ["blue", "red", "lime"];
   let selectedColorIndex = 1;
 
@@ -115,7 +135,7 @@ export default function Game() {
   let isGameOver = false;
   let updateGame = true;
 
-  const GAME_MODE = "DEVE";
+  const GAME_MODE = "PROD";
   const MIN_DISTANCE_TO_START_GAME = 150;
 
   let lastGhostTreeAddedAtFrame;
@@ -194,13 +214,15 @@ export default function Game() {
   };
 
   const setup = (p5, canvasParentRef) => {
-    p5.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT).parent(canvasParentRef);
+    p5.createCanvas(CANVAS_WIDTH_REF.current, CANVAS_HEIGHT_REF.current).parent(
+      canvasParentRef
+    );
 
     for (let color of ALL_COLORS) {
       P5_HSL_COLORS[color] = p5.color(HSL_COLOR_PAIRS[color]);
     }
 
-    BACKDROP_SCALE = CANVAS_HEIGHT / 540;
+    BACKDROP_SCALE = CANVAS_HEIGHT_REF.current / 540;
 
     for (let index = 0; index <= 2; index++) {
       BACKDROPS.push(
@@ -210,16 +232,18 @@ export default function Game() {
 
     DINO = new Character(
       p5,
-      CANVAS_WIDTH / 3,
+      CANVAS_WIDTH_REF.current / 3,
       CHARACTER_JUMPING_IMAGES[AVAILABLE_COLORS[selectedColorIndex]],
       CHARACTER_FALLING_IMAGES[AVAILABLE_COLORS[selectedColorIndex]],
       CHARACTER_IDLE_IMAGES[AVAILABLE_COLORS[selectedColorIndex]],
       CHARACTER_DEAD_IMAGES[AVAILABLE_COLORS[selectedColorIndex]]
     );
 
-    GHOST_DINO = new Character(p5, CANVAS_WIDTH + 100);
+    GHOST_DINO = new Character(p5, CANVAS_WIDTH_REF.current + 100);
 
     TEXT = new Text();
+
+    p5.frameRate(45);
   };
 
   const draw = (p5) => {
@@ -252,8 +276,15 @@ export default function Game() {
       }
 
       // Show Score
-      p5.textAlign(p5.RIGHT);
-      TEXT.show(p5, `Score: ${score}`, 0, 10, CANVAS_WIDTH, 32);
+      TEXT.show(
+        p5,
+        `Score: ${score}`,
+        0,
+        10,
+        CANVAS_WIDTH_REF.current,
+        32,
+        "right"
+      );
 
       // UPDATE
       if (updateGame) {
@@ -311,7 +342,9 @@ export default function Game() {
             p5.frameCount - lastGhostTreeAddedAtFrame <= 0 ||
             p5.frameCount - lastGhostTreeAddedAtFrame >= 10
           ) {
-            TREES.push(new Tree(p5, TREE_IMAGES["default"], CANVAS_WIDTH));
+            TREES.push(
+              new Tree(p5, TREE_IMAGES["default"], CANVAS_WIDTH_REF.current)
+            );
           }
 
           lastGhostTreeAddedAtFrame = p5.frameCount;
@@ -342,6 +375,8 @@ export default function Game() {
               selectedColorIndex !== TREES[nextTreeIndex].colorIndex
             ) {
               if (GAME_MODE !== "DEV") {
+                saveScore();
+
                 DINO.isDead = true;
                 updateGame = false;
 

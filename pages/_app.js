@@ -22,7 +22,7 @@ function MyApp({ Component, pageProps }) {
   return (
     <>
       <Head>
-        <title>Color Match</title>
+        <title>Jumpy Dino</title>
         <meta
           name="description"
           content="Match the bar color with the ball color."
