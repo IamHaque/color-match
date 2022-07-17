@@ -1,4 +1,4 @@
-import Leaderboard from "../leaderboard/leaderboard";
+import Leaderboard from "../Leaderboard/leaderboard";
 
 import styles from "./gameOver.module.scss";
 
