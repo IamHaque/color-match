@@ -1,5 +1,5 @@
 export default class Character {
-  constructor(p5, x, colors, outlineColors, jump, fall, idle, dead) {
+  constructor(p5, x, colors, jump, fall, idle, dead) {
     this.frames = 0;
     this.radius = 60;
     this.x = x;
