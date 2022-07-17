@@ -1,11 +1,11 @@
-export const getLeaderboardData = async (
-  hostname = "http://localhost:3000"
-) => {
+export const getLeaderboardData = async (hostname) => {
+  const URL = hostname ? hostname + "/api/leaderboard" : "/api/leaderboard";
+
   const requestOptions = {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   };
-  const response = await fetch(hostname + "/api/leaderboard", requestOptions);
+  const response = await fetch(URL, requestOptions);
   const data = await response.json();
 
   if (data && data.status && data.status === "success") {
