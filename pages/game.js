@@ -19,14 +19,14 @@ const Sketch = dynamic(
   }
 );
 
-let CANVAS_WIDTH = 100;
-let CANVAS_HEIGHT = 100;
-
-let JUMP_SOUND;
-let DEATH_SOUND;
-let SCORE_INCREASE_SOUND;
-
 export default function Game() {
+  let CANVAS_WIDTH = 100;
+  let CANVAS_HEIGHT = 100;
+
+  let JUMP_SOUND;
+  let DEATH_SOUND;
+  let SCORE_INCREASE_SOUND;
+
   useEffect(() => {
     JUMP_SOUND = new Audio("/land.mp3");
     DEATH_SOUND = new Audio("/death.mp3");
@@ -51,14 +51,19 @@ export default function Game() {
     JUMP_SOUND.play();
   };
 
-  const playDeathSound = () => {
-    stopAllSounds();
-    DEATH_SOUND.play();
-  };
-
   const playScoreSound = () => {
     stopAllSounds();
     SCORE_INCREASE_SOUND.play();
+  };
+
+  const playDeathSound = () => {
+    JUMP_SOUND.pause();
+    SCORE_INCREASE_SOUND.pause();
+
+    JUMP_SOUND.currentTime = 0;
+    SCORE_INCREASE_SOUND.currentTime = 0;
+
+    if (DEATH_SOUND.currentTime <= 0) DEATH_SOUND.play();
   };
 
   const ALL_COLORS = [
@@ -296,8 +301,8 @@ export default function Game() {
           DINO.changeState("JUMPING");
         }
 
-        const isGhostBallAtFloor = GHOST_DINO.update(p5, nextTreeCenter);
-        if (isGhostBallAtFloor) {
+        const isGhostCharacterAtFloor = GHOST_DINO.update(p5, nextTreeCenter);
+        if (isGhostCharacterAtFloor) {
           if (!lastGhostTreeAddedAtFrame)
             lastGhostTreeAddedAtFrame = p5.frameCount;
 
@@ -306,15 +311,16 @@ export default function Game() {
             p5.frameCount - lastGhostTreeAddedAtFrame >= 10
           ) {
             TREES.push(new Tree(p5, TREE_IMAGES["default"], CANVAS_WIDTH));
-            lastGhostTreeAddedAtFrame = p5.frameCount;
           }
+
+          lastGhostTreeAddedAtFrame = p5.frameCount;
         }
       }
 
       if (isGameStarted) {
-        const isBallAtFloor = DINO.update(p5, nextTreeCenter);
+        const isCharacterAtFloor = DINO.update(p5, nextTreeCenter);
 
-        if (isBallAtFloor) {
+        if (isCharacterAtFloor) {
           if (updateGame) {
             showSmokeParticles = true;
 
@@ -334,14 +340,13 @@ export default function Game() {
               TREES.length > 0 &&
               selectedColorIndex !== TREES[nextTreeIndex].colorIndex
             ) {
-              lastTreeAddedAtFrame = p5.frameCount;
-
               setTimeout(() => {
                 isGameOver = true;
               }, 2000);
 
               DINO.isDead = true;
               updateGame = false;
+
               playDeathSound();
             } else {
               playJumpSound();
@@ -369,6 +374,8 @@ export default function Game() {
                 ],
               });
             }
+
+            lastTreeAddedAtFrame = p5.frameCount;
           }
         }
       }
