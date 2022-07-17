@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
 
 import { useEffect } from "react";
 
@@ -20,6 +21,8 @@ const Sketch = dynamic(
 );
 
 export default function Game() {
+  const router = useRouter();
+
   let CANVAS_WIDTH = 100;
   let CANVAS_HEIGHT = 100;
 
@@ -35,6 +38,13 @@ export default function Game() {
     CANVAS_HEIGHT = window.innerHeight;
     CANVAS_WIDTH = window.innerWidth > 720 ? 720 : window.innerWidth;
   }, []);
+
+  const redirectTOGameOver = (score) => {
+    router.push({
+      pathname: "/gameOver",
+      query: { score },
+    });
+  };
 
   const stopAllSounds = () => {
     JUMP_SOUND.pause();
@@ -211,21 +221,12 @@ export default function Game() {
   };
 
   const draw = (p5) => {
+    if (p5.frameCount % 120 === 0) {
+      console.log(p5.frameRate(), TREES.length);
+    }
+
     // DRAW
     p5.clear();
-
-    if (isGameOver) {
-      p5.textAlign(p5.CENTER);
-      TEXT.show(p5, `Game Over`, 0, p5.windowHeight / 2 - 32, CANVAS_WIDTH, 32);
-      TEXT.show(
-        p5,
-        `Score: ${score}`,
-        0,
-        p5.windowHeight / 2 + 32,
-        CANVAS_WIDTH,
-        32
-      );
-    }
 
     if (!isGameOver) {
       for (let backdrop of BACKDROPS) {
@@ -342,11 +343,10 @@ export default function Game() {
             ) {
               setTimeout(() => {
                 isGameOver = true;
-              }, 2000);
-
+                redirectTOGameOver(score);
+              }, 1000);
               DINO.isDead = true;
               updateGame = false;
-
               playDeathSound();
             } else {
               playJumpSound();
@@ -384,6 +384,8 @@ export default function Game() {
 
   const mouseClicked = (p5) => {
     if (isGameOver) {
+      return;
+
       DINO = new Character(
         p5,
         CANVAS_WIDTH / 2,
@@ -427,6 +429,7 @@ export default function Game() {
       preload={preload}
       className={styles.canvas}
       mouseClicked={mouseClicked}
+      disableFriendlyErrors={true}
     />
   );
 }

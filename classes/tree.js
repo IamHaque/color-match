@@ -4,7 +4,7 @@ export default class Tree {
     this.width = 90;
     this.y = p5.windowHeight * 0.6;
     this.height = p5.windowHeight * 0.4 + 10;
-    this.x = windowWidth * 0.5 + Math.floor((windowWidth * 0.5) / 94) * 94;
+    this.x = windowWidth * 0.5 + Math.floor((windowWidth * 0.5) / 94) * 94 * 2;
 
     this.image = image;
     this.colorIndex = -1;
