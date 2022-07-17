@@ -9,7 +9,7 @@ function MyApp({ Component, pageProps }) {
     const setWindowHeight = () => {
       document.documentElement.style.setProperty(
         "--vh",
-        `${window.innerHeight}px`
+        `${window.innerHeight - 0.4}px`
       );
     };
 
@@ -26,6 +26,13 @@ function MyApp({ Component, pageProps }) {
         <meta
           name="description"
           content="Match the bar color with the ball color."
+        />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Bungee+Inline&family=Press+Start+2P&display=swap"
+          rel="stylesheet"
         />
       </Head>
 

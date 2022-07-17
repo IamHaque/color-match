@@ -1,12 +1,11 @@
 import styles from "./leaderboard.module.scss";
 
-const Leaderboard = ({
+export default function Leaderboard({
   data,
   currentUser,
   minDataLength,
   minLeaderboardUsers,
-  ...props
-}) => {
+}) {
   if (!data || data.length <= minDataLength) return;
 
   let emptyLeaderboardRows;
@@ -44,6 +43,4 @@ const Leaderboard = ({
       </section>
     </>
   );
-};
-
-export default Leaderboard;
+}
