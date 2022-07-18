@@ -34,8 +34,9 @@ const Sketch = dynamic(
 
 export default function Home({ leaderboardData }) {
   // Game variables
-  let REMAINING_COLORS = ["cyan", "pink", "purple"];
-  let AVAILABLE_COLORS = ["blue", "red", "lime"];
+  // ["blue", "cyan", "lime", "pink", "purple", "red"]
+  let REMAINING_COLORS = ["cyan", "pink", "red"];
+  let AVAILABLE_COLORS = ["blue", "purple", "lime"];
   let selectedColorIndex = 1;
 
   const P5_HSL_COLORS = [];
@@ -47,7 +48,7 @@ export default function Home({ leaderboardData }) {
   let DINO;
 
   let score = 0;
-  let difficultyIncrementAtScore = 15;
+  let difficultyIncrementAtScore = 15 + Math.floor(Math.random() * 5);
 
   let isGameStarted = false;
   let isGameOver = false;
@@ -77,6 +78,7 @@ export default function Home({ leaderboardData }) {
   const [isBusy, setIsBusy] = useState(false);
   const [username, setUsername] = useState("");
   const [userExists, setUserExists] = useState(false);
+  const [currentScore, setCurrentScore] = useState(0);
   const [response, setResponse] = useState(undefined);
   const [gameState, setGameState] = useState("homeScreen");
   const [leaderboard, setLeaderboard] = useState(leaderboardData);
@@ -105,6 +107,37 @@ export default function Home({ leaderboardData }) {
     }
   }, []);
 
+  const stopAllSounds = () => {
+    JUMP_SOUND_REF.current.pause();
+    DEATH_SOUND_REF.current.pause();
+    SCORE_INCREASE_SOUND_REF.current.pause();
+
+    JUMP_SOUND_REF.current.currentTime = 0;
+    DEATH_SOUND_REF.current.currentTime = 0;
+    SCORE_INCREASE_SOUND_REF.current.currentTime = 0;
+  };
+
+  const playDeathSound = () => {
+    JUMP_SOUND_REF.current.pause();
+    SCORE_INCREASE_SOUND_REF.current.pause();
+
+    JUMP_SOUND_REF.current.currentTime = 0;
+    SCORE_INCREASE_SOUND_REF.current.currentTime = 0;
+
+    if (DEATH_SOUND_REF.current.currentTime <= 0)
+      DEATH_SOUND_REF.current.play();
+  };
+
+  const playJumpSound = () => {
+    stopAllSounds();
+    JUMP_SOUND_REF.current.play();
+  };
+
+  const playScoreSound = () => {
+    stopAllSounds();
+    SCORE_INCREASE_SOUND_REF.current.play();
+  };
+
   const handleInput = (e) => {
     setUsername(e.target.value.trim());
   };
@@ -123,6 +156,7 @@ export default function Home({ leaderboardData }) {
     if (isBusy) return;
 
     setIsBusy(true);
+    setCurrentScore(0);
     setGameState("playing");
     setIsBusy(false);
   };
@@ -131,6 +165,7 @@ export default function Home({ leaderboardData }) {
     if (isBusy) return;
 
     setIsBusy(true);
+    setCurrentScore(0);
     setGameState("homeScreen");
     setIsBusy(false);
   };
@@ -140,38 +175,8 @@ export default function Home({ leaderboardData }) {
     const data = await API.getLeaderboardData();
 
     setLeaderboard(data);
+    setCurrentScore(score);
     setGameState("gameOver");
-  };
-
-  const stopAllSounds = () => {
-    JUMP_SOUND_REF.current.pause();
-    DEATH_SOUND_REF.current.pause();
-    SCORE_INCREASE_SOUND_REF.current.pause();
-
-    JUMP_SOUND_REF.current.currentTime = 0;
-    DEATH_SOUND_REF.current.currentTime = 0;
-    SCORE_INCREASE_SOUND_REF.current.currentTime = 0;
-  };
-
-  const playJumpSound = () => {
-    stopAllSounds();
-    JUMP_SOUND_REF.current.play();
-  };
-
-  const playScoreSound = () => {
-    stopAllSounds();
-    SCORE_INCREASE_SOUND_REF.current.play();
-  };
-
-  const playDeathSound = () => {
-    JUMP_SOUND_REF.current.pause();
-    SCORE_INCREASE_SOUND_REF.current.pause();
-
-    JUMP_SOUND_REF.current.currentTime = 0;
-    SCORE_INCREASE_SOUND_REF.current.currentTime = 0;
-
-    if (DEATH_SOUND_REF.current.currentTime <= 0)
-      DEATH_SOUND_REF.current.play();
   };
 
   const handleGameOver = async () => {
@@ -183,8 +188,14 @@ export default function Home({ leaderboardData }) {
     // Save score in local storage
     localStorage.setItem("jumpyDinoLastScore", JSON.stringify(score));
 
-    // Save score in database
-    await API.updateLeaderboard(username, score);
+    // Save score in database if score greater than highscore
+    const userLeaderboardData = leaderboard.find(
+      (user) => user.username === username
+    );
+
+    if (!userLeaderboardData || userLeaderboardData.highscore < score) {
+      await API.updateLeaderboard(username, score);
+    }
 
     setTimeout(() => {
       isGameOver = true;
@@ -280,6 +291,7 @@ export default function Home({ leaderboardData }) {
       );
     }
 
+    selectedColorIndex = getRandomArrayIndex(AVAILABLE_COLORS);
     DINO = new Character(
       p5,
       CANVAS_WIDTH_REF.current / 3,
@@ -371,27 +383,8 @@ export default function Home({ leaderboardData }) {
         "right"
       );
 
-      !isGameStarted &&
-        TEXT.show(
-          p5,
-          `Tap to change`,
-          0,
-          CANVAS_HEIGHT_REF.current / 3,
-          CANVAS_WIDTH_REF.current,
-          32,
-          "center"
-        );
-
-      !isGameStarted &&
-        TEXT.show(
-          p5,
-          `tree color!`,
-          0,
-          CANVAS_HEIGHT_REF.current / 3 + 48,
-          CANVAS_WIDTH_REF.current,
-          32,
-          "center"
-        );
+      // Display game instructions
+      !isGameStarted && showGameInfo(p5);
 
       // UPDATE
       if (updateGame) {
@@ -517,24 +510,54 @@ export default function Home({ leaderboardData }) {
     }
   };
 
-  // P5 MouseClicked
-  const mouseClicked = ({ _setupDone }) => {
-    if (isGameOver) return;
-    changeTreeColor(_setupDone);
+  const showGameInfo = (p5) => {
+    p5.push();
+
+    if (CANVAS_WIDTH_REF.current < 380) {
+      p5.textSize(16);
+    } else if (CANVAS_WIDTH_REF.current < 480) {
+      p5.textSize(18);
+    } else {
+      p5.textSize(20);
+    }
+
+    p5.textAlign(p5.CENTER);
+    p5.textFont("Helvetica");
+    p5.fill(0, 127);
+    p5.noStroke();
+    p5.stroke(255, 100);
+
+    p5.text(
+      "Tap on left or right side of the screen\nto change the tree color.\nMatch the tree color with the color of\nthe dino!",
+      CANVAS_WIDTH_REF.current / 2,
+      CANVAS_HEIGHT_REF.current / 3.2
+    );
+
+    p5.pop();
   };
 
-  const changeTreeColor = (setupDone) => {
-    if (
-      setupDone &&
-      updateGame &&
-      TREES.length > 0 &&
-      nextTreeIndex !== undefined
-    ) {
-      TREES[nextTreeIndex].colorIndex =
-        (TREES[nextTreeIndex].colorIndex + 1) % AVAILABLE_COLORS.length;
+  // P5 MouseClicked
+  const mouseClicked = ({ _setupDone, pmouseX }) => {
+    if (isGameOver) return;
+    if (!_setupDone) return;
 
+    if (updateGame && TREES.length > 0 && nextTreeIndex !== undefined) {
+      const minX = 0;
+      const maxX = CANVAS_WIDTH_REF.current;
+      const midX = maxX / 2;
+
+      let nextColorIndex = TREES[nextTreeIndex].colorIndex;
+      if (pmouseX >= minX && pmouseX < midX) nextColorIndex -= 1;
+      if (pmouseX <= maxX && pmouseX > midX) nextColorIndex += 1;
+
+      nextColorIndex =
+        nextColorIndex < 0
+          ? AVAILABLE_COLORS.length - 1
+          : nextColorIndex % AVAILABLE_COLORS.length;
+
+      TREES[nextTreeIndex].colorIndex = nextColorIndex;
       TREES[nextTreeIndex].changeTreeColor(
-        TREE_IMAGES[AVAILABLE_COLORS[TREES[nextTreeIndex].colorIndex]]
+        TREE_IMAGES[AVAILABLE_COLORS[nextColorIndex]]
       );
     }
   };
@@ -542,10 +565,10 @@ export default function Home({ leaderboardData }) {
   if (gameState === "gameOver") {
     return (
       <GameOver
-        score={score}
         isBusy={isBusy}
         minDataLength={-1}
         data={leaderboard}
+        score={currentScore}
         currentUser={username}
         minLeaderboardUsers={5}
         homepageClickHandler={goToHome}

@@ -13,6 +13,6 @@ export const HSL_COLOR_PAIRS = {
 
 export const GAME_MODE = "PROD";
 
-export const DIFFICULTY_MULTIPLIER = 2.4;
+export const DIFFICULTY_MULTIPLIER = 2.5;
 
 export const MIN_DISTANCE_TO_START_GAME = 150;
