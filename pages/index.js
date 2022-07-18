@@ -518,18 +518,18 @@ export default function Home({ leaderboardData }) {
   };
 
   // P5 MouseClicked
-  const mouseClicked = () => {
+  const mouseClicked = ({ _setupDone }) => {
     if (isGameOver) return;
-    changeTreeColor();
+    changeTreeColor(_setupDone);
   };
 
-  const touchStarted = () => {
-    if (isGameOver) return;
-    changeTreeColor();
-  };
-
-  const changeTreeColor = () => {
-    if (updateGame && nextTreeIndex !== undefined && TREES.length > 0) {
+  const changeTreeColor = (setupDone) => {
+    if (
+      setupDone &&
+      updateGame &&
+      TREES.length > 0 &&
+      nextTreeIndex !== undefined
+    ) {
       TREES[nextTreeIndex].colorIndex =
         (TREES[nextTreeIndex].colorIndex + 1) % AVAILABLE_COLORS.length;
 
@@ -562,7 +562,6 @@ export default function Home({ leaderboardData }) {
         preload={preload}
         className={styles.canvas}
         mouseClicked={mouseClicked}
-        touchStarted={touchStarted}
         disableFriendlyErrors={true}
       />
     );
