@@ -48,8 +48,9 @@ export default function Home({ leaderboardData }) {
   let DINO;
 
   let score = 0;
-  let difficultyIncrementAtScore = 15 + Math.floor(Math.random() * 5);
+  let difficultyIncrementAtScore = 20 + Math.floor(Math.random() * 10);
 
+  let firstTreeHasCrossed = false;
   let isGameStarted = false;
   let isGameOver = false;
   let updateGame = true;
@@ -73,6 +74,8 @@ export default function Home({ leaderboardData }) {
   let CHARACTER_DEAD_IMAGES = {};
   let CHARACTER_JUMPING_IMAGES = {};
   let CHARACTER_FALLING_IMAGES = {};
+
+  let GAME_OVER_TIMEOUT;
 
   // Game states
   const [isBusy, setIsBusy] = useState(false);
@@ -175,11 +178,16 @@ export default function Home({ leaderboardData }) {
     const data = await API.getLeaderboardData();
 
     setLeaderboard(data);
+
     setCurrentScore(score);
     setGameState("gameOver");
+
+    clearTimeout(GAME_OVER_TIMEOUT);
   };
 
   const handleGameOver = async () => {
+    if (GAME_OVER_TIMEOUT) return;
+
     playDeathSound();
 
     DINO.isDead = true;
@@ -197,7 +205,7 @@ export default function Home({ leaderboardData }) {
       await API.updateLeaderboard(username, score);
     }
 
-    setTimeout(() => {
+    GAME_OVER_TIMEOUT = setTimeout(() => {
       isGameOver = true;
       redirectTOGameOver();
     }, 1000);
@@ -215,6 +223,146 @@ export default function Home({ leaderboardData }) {
       const nextColor = REMAINING_COLORS.splice(nextColorIndex, 1)[0];
       AVAILABLE_COLORS.push(nextColor);
     }
+  };
+
+  const showTopColorBars = (p5) => {
+    const colorBarHeight = 15;
+    const colorBarWidth = CANVAS_WIDTH_REF.current / AVAILABLE_COLORS.length;
+    for (let index = 0; index < AVAILABLE_COLORS.length; index++) {
+      p5.noStroke();
+      p5.fill(HSL_COLOR_PAIRS[AVAILABLE_COLORS[index]]);
+      p5.rect(index * colorBarWidth, 0, colorBarWidth, colorBarHeight);
+
+      if (
+        nextTreeIndex !== undefined &&
+        TREES.length > 0 &&
+        TREES[nextTreeIndex].colorIndex === index
+      ) {
+        p5.push();
+        p5.strokeWeight(3);
+        p5.drawingContext.setLineDash([8, 8, 8]);
+        p5.stroke(255);
+        p5.rect(
+          index * colorBarWidth + 1.5,
+          0 + 1.5,
+          colorBarWidth - 3,
+          colorBarHeight - 3
+        );
+        p5.pop();
+      }
+    }
+
+    p5.strokeWeight(2);
+    p5.stroke(0);
+    p5.line(
+      0,
+      colorBarHeight + 1,
+      CANVAS_WIDTH_REF.current,
+      colorBarHeight + 1
+    );
+  };
+
+  const drawGameGraphics = (p5) => {
+    for (let backdrop of BACKDROPS) {
+      backdrop.draw(p5);
+    }
+
+    for (let tree of TREES) {
+      tree.draw(p5);
+    }
+
+    showTopColorBars(p5);
+
+    DINO.draw(p5);
+
+    if (showSmokeParticles) {
+      let imageIndex = Math.floor(p5.frameCount * 0.125) % SMOKE_IMAGES.length;
+
+      imageIndex >= 0 &&
+        p5.image(
+          SMOKE_IMAGES[imageIndex],
+          DINO.x - 48 - (p5.frameCount % 20),
+          DINO.floorYMax - 64,
+          32 * 3,
+          32 * 3
+        );
+    }
+
+    // Show Score
+    TEXT.show(
+      p5,
+      `Score: ${score}`,
+      0,
+      35,
+      CANVAS_WIDTH_REF.current - 20,
+      32,
+      "right"
+    );
+  };
+
+  const showGameInfo = (p5) => {
+    p5.push();
+
+    let textSize = 20;
+
+    if (CANVAS_WIDTH_REF.current < 380) {
+      textSize = 16;
+    } else if (CANVAS_WIDTH_REF.current < 480) {
+      textSize = 18;
+    }
+
+    p5.textSize(textSize);
+    p5.textAlign(p5.CENTER);
+    p5.textFont("Helvetica");
+    p5.stroke(0, 123);
+    p5.fill(255, 127);
+
+    p5.text(
+      "Tap on left or right side of the screen\nto change the tree color.\nMatch the tree color with the color of\nthe dino!\n\nTAP ANYWHERE TO START",
+      CANVAS_WIDTH_REF.current / 2,
+      CANVAS_HEIGHT_REF.current / 2 - textSize * 2.5
+    );
+
+    textSize *= 2;
+    p5.textSize(textSize);
+
+    p5.text(
+      "LEFT",
+      0,
+      CANVAS_HEIGHT_REF.current - textSize * 1.5,
+      CANVAS_WIDTH_REF.current / 2,
+      textSize
+    );
+
+    p5.text(
+      "RIGHT",
+      CANVAS_WIDTH_REF.current / 2,
+      CANVAS_HEIGHT_REF.current - textSize * 1.5,
+      CANVAS_WIDTH_REF.current / 2,
+      textSize
+    );
+
+    p5.pop();
+  };
+
+  const showOverlay = (p5) => {
+    p5.push();
+    p5.fill(0);
+    p5.noStroke();
+    p5.rect(0, 0, CANVAS_WIDTH_REF.current, CANVAS_HEIGHT_REF.current);
+
+    p5.fill(255, 50);
+    p5.rect(0, 0, CANVAS_WIDTH_REF.current / 2 - 1, CANVAS_HEIGHT_REF.current);
+    p5.rect(
+      CANVAS_WIDTH_REF.current / 2 + 1,
+      0,
+      CANVAS_WIDTH_REF.current,
+      CANVAS_HEIGHT_REF.current
+    );
+
+    showGameInfo(p5);
+    DINO.draw(p5);
+    p5.pop();
   };
 
   // P5 Preload
@@ -312,82 +460,13 @@ export default function Home({ leaderboardData }) {
       // DRAW
       p5.clear();
 
-      const colorBarHeight = 15;
-      const colorBarWidth = CANVAS_WIDTH_REF.current / AVAILABLE_COLORS.length;
-
-      for (let index = 0; index < AVAILABLE_COLORS.length; index++) {
-        p5.noStroke();
-        p5.fill(HSL_COLOR_PAIRS[AVAILABLE_COLORS[index]]);
-        p5.rect(index * colorBarWidth, 0, colorBarWidth, colorBarHeight);
-
-        if (
-          nextTreeIndex !== undefined &&
-          TREES.length > 0 &&
-          TREES[nextTreeIndex].colorIndex === index
-        ) {
-          p5.push();
-          p5.strokeWeight(3);
-          p5.drawingContext.setLineDash([8, 8, 8]);
-          p5.stroke(255);
-          p5.rect(
-            index * colorBarWidth + 1.5,
-            0 + 1.5,
-            colorBarWidth - 3,
-            colorBarHeight - 3
-          );
-          p5.pop();
-        }
-      }
-
-      p5.strokeWeight(2);
-      p5.stroke(0);
-      p5.line(
-        0,
-        colorBarHeight + 1,
-        CANVAS_WIDTH_REF.current,
-        colorBarHeight + 1
-      );
-
-      for (let backdrop of BACKDROPS) {
-        backdrop.draw(p5);
-      }
-
-      for (let tree of TREES) {
-        tree.draw(p5);
-      }
-
-      DINO.draw(p5);
-
-      if (showSmokeParticles) {
-        let imageIndex =
-          Math.floor(p5.frameCount * 0.125) % SMOKE_IMAGES.length;
-
-        imageIndex >= 0 &&
-          p5.image(
-            SMOKE_IMAGES[imageIndex],
-            DINO.x - 48 - (p5.frameCount % 20),
-            DINO.floorYMax - 64,
-            32 * 3,
-            32 * 3
-          );
-      }
-
-      // Show Score
-      TEXT.show(
-        p5,
-        `Score: ${score}`,
-        0,
-        35,
-        CANVAS_WIDTH_REF.current - 20,
-        32,
-        "right"
-      );
+      drawGameGraphics(p5);
 
       // Display game instructions
-      !isGameStarted && showGameInfo(p5);
+      !isGameStarted && showOverlay(p5);
 
       // UPDATE
-      if (updateGame) {
+      if (isGameStarted && updateGame) {
         for (let backdrop of BACKDROPS) {
           backdrop.update();
         }
@@ -426,10 +505,10 @@ export default function Home({ leaderboardData }) {
         }
 
         if (
-          !isGameStarted &&
+          !firstTreeHasCrossed &&
           nextTreeCenter - DINO.x < MIN_DISTANCE_TO_START_GAME
         ) {
-          isGameStarted = true;
+          firstTreeHasCrossed = true;
           DINO.changeState("JUMPING");
         }
 
@@ -451,7 +530,7 @@ export default function Home({ leaderboardData }) {
         }
       }
 
-      if (isGameStarted) {
+      if (isGameStarted && firstTreeHasCrossed) {
         const isCharacterAtFloor = DINO.update(p5, nextTreeCenter);
 
         if (isCharacterAtFloor) {
@@ -510,36 +589,15 @@ export default function Home({ leaderboardData }) {
     }
   };
 
-  const showGameInfo = (p5) => {
-    p5.push();
-
-    if (CANVAS_WIDTH_REF.current < 380) {
-      p5.textSize(16);
-    } else if (CANVAS_WIDTH_REF.current < 480) {
-      p5.textSize(18);
-    } else {
-      p5.textSize(20);
-    }
-
-    p5.textAlign(p5.CENTER);
-    p5.textFont("Helvetica");
-    p5.fill(0, 127);
-    p5.noStroke();
-    p5.stroke(255, 100);
-
-    p5.text(
-      "Tap on left or right side of the screen\nto change the tree color.\nMatch the tree color with the color of\nthe dino!",
-      CANVAS_WIDTH_REF.current / 2,
-      CANVAS_HEIGHT_REF.current / 3.2
-    );
-
-    p5.pop();
-  };
-
   // P5 MouseClicked
   const mouseClicked = ({ _setupDone, pmouseX }) => {
     if (isGameOver) return;
     if (!_setupDone) return;
+
+    if (!isGameStarted) {
+      isGameStarted = true;
+      return;
+    }
 
     if (updateGame && TREES.length > 0 && nextTreeIndex !== undefined) {
       const minX = 0;
