@@ -34,9 +34,9 @@ const Sketch = dynamic(
 
 export default function Home({ leaderboardData }) {
   // Game variables
-  // ["blue", "cyan", "lime", "pink", "purple", "red"]
-  let REMAINING_COLORS = ["cyan", "pink", "red"];
-  let AVAILABLE_COLORS = ["blue", "purple", "lime"];
+  // ["blue", "cyan", "green", "lime", "orange", "pink", "purple", "red"]
+  let REMAINING_COLORS = ["cyan", "lime", "orange", "pink", "purple"];
+  let AVAILABLE_COLORS = ["red", "green", "blue"];
   let selectedColorIndex = 1;
 
   const P5_HSL_COLORS = [];
@@ -228,9 +228,10 @@ export default function Home({ leaderboardData }) {
   const showTopColorBars = (p5) => {
     const colorBarHeight = 15;
     const colorBarWidth = CANVAS_WIDTH_REF.current / AVAILABLE_COLORS.length;
+
     for (let index = 0; index < AVAILABLE_COLORS.length; index++) {
       p5.noStroke();
-      p5.fill(HSL_COLOR_PAIRS[AVAILABLE_COLORS[index]]);
+      p5.fill(P5_HSL_COLORS[AVAILABLE_COLORS[index]]);
       p5.rect(index * colorBarWidth, 0, colorBarWidth, colorBarHeight);
 
       if (

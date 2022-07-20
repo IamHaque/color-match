@@ -1,14 +1,23 @@
-export const ALL_COLORS = ["blue", "cyan", "lime", "pink", "purple", "red"];
+export const ALL_COLORS = [
+  "blue",
+  "cyan",
+  "green",
+  "lime",
+  "orange",
+  "pink",
+  "purple",
+  "red",
+];
 
 export const HSL_COLOR_PAIRS = {
-  blue: "hsl(194, 91%, 68%)",
-  cyan: "hsl(172, 70%, 59%)",
-  green: "hsl(72, 59%, 57%)",
-  lime: "hsl(146, 71%, 60%)",
-  orange: "hsl(22, 92%, 74%)",
-  pink: "hsl(309, 92%, 81%)",
-  purple: "hsl(262, 90%, 84%)",
-  red: "hsl(356, 78%, 70%)",
+  blue: "hsl(203, 93%, 55%)",
+  cyan: "hsl(177, 63%, 46%)",
+  green: "hsl(79, 61%, 44%)",
+  lime: "hsl(152, 100%, 41%)",
+  orange: "hsl(30, 100%, 56%)",
+  pink: "hsl(319, 100%, 71%)",
+  purple: "hsl(271, 100%, 76%)",
+  red: "hsl(12, 97%, 62%)",
 };
 
 export const GAME_MODE = "PROD";
